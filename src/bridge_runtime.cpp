@@ -67,7 +67,7 @@ namespace bridge_runtime {
 
 void setupBridge(WiFiServer &tcpServer, HardwareSerial &uart, const BridgeConfig &config) {
   // Enable power to MAX3232 before initializing UART
-  // Hardware circuit: GPIO -> 1kΩ resistor -> 2N3904 NPN base
+  // Hardware circuit: GPIO -> 5kΩ resistor -> 2N3904 NPN base
   //   3.3V -> MAX3232 VCC
   //   MAX3232 GND -> NPN collector
   //   NPN emitter -> GND
@@ -76,14 +76,14 @@ void setupBridge(WiFiServer &tcpServer, HardwareSerial &uart, const BridgeConfig
   digitalWrite(cfg::kMax3232PowerPin, HIGH);  // HIGH = NPN ON (for 2N3904)
   
   Serial.printf("MAX3232 power control enabled (GPIO %d = HIGH for NPN ON).\n", cfg::kMax3232PowerPin);
-  Serial.println("** Circuit: GPIO --[1kΩ]--> 2N3904 base, MAX3232-GND -> collector, emitter -> GND **");
+  Serial.println("** Circuit: GPIO --[5kΩ]--> 2N3904 base, MAX3232-GND -> collector, emitter -> GND **");
   delay(50);  // Give MAX3232 time to power up
   
   uart.begin(config.baudRate, SERIAL_8N1, cfg::kBridgeRxPin, cfg::kBridgeTxPin);
   setupStatusLed();
   tcpServer.begin();
   tcpServer.setNoDelay(true);
-  Serial.printf("TCP server started on port %u.\n", cfg::kTcpPort);
+  Serial.printf("TCP server started on port %u.\n", cfg::kTcpPort); 
   Serial.printf("UART bridge on RX=%d TX=%d at %lu baud.\n", cfg::kBridgeRxPin, cfg::kBridgeTxPin,
                 static_cast<unsigned long>(config.baudRate));
 }

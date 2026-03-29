@@ -43,9 +43,36 @@ PlatformIO firmware for ESP32-C3 and ESP32-S3 boards that provides:
 Default UART bridge pins in firmware (mapped by environment and board):
 
 - `esp32-c3-supermini` -> `esp32-c3-devkitm-1` (ESP32-C3): RX GPIO20, TX GPIO21
-- `esp32-s3-zero` -> `adafruit_qtpy_esp32s3_n4r2` (ESP32-S3): RX GPIO7, TX GPIO8
+- `esp32-s3-zero` -> `adafruit_qtpy_esp32s3_n4r2` (ESP32-S3): RX GPIO8, TX GPIO7
 
-If your board wiring differs, adjust `kBridgeRxPin` and `kBridgeTxPin` in `src/config.h`.
+### MAX3232 Power Control
+
+The firmware includes power control for the MAX3232 RS-232 transceiver, ensuring it only powers on after the ESP32 is fully initialized. This prevents floating signals during boot.
+
+**Power Control GPIO:**
+
+- ESP32-S3: GPIO 9
+- ESP32-C3: GPIO 10
+
+**Required Circuit:**
+The GPIO cannot directly power the MAX3232 (it draws ~10mA, which would overload the pin). You need a simple NPN transistor switching circuit:
+
+```
+3.3V rail ────────────────→ MAX3232 VCC
+
+MAX3232 GND ──→ Collector─┤ 2N3904 NPN (or similar)
+                        Base ──[1kΩ-10kΩ]── ESP32 GPIO 9/10
+                     Emitter ──→ GND
+```
+
+**Parts needed:**
+
+- 1x NPN transistor (e.g., 2N3904, 2N2222, BC547)
+- 1x resistor (1kΩ - 10kΩ work well; 5kΩ is ideal)
+
+When the ESP32 boots, it sets the GPIO HIGH, turning on the transistor and completing the ground path for the MAX3232.
+
+If your board wiring differs, adjust `kBridgeRxPin`, `kBridgeTxPin`, and `kMax3232PowerPin` in `src/config.h`.
 The status LED uses `LED_BUILTIN` by default. You can override this with `STATUS_LED_PIN` and set active-low behavior with `STATUS_LED_ACTIVE_LOW=1` in `platformio.ini`.
 
 Supported PlatformIO environments:
